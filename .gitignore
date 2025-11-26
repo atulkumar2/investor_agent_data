@@ -46,6 +46,7 @@ logs/
 *.csv
 *.log
 *.txt
+NSE_Snapshot/
 
 # Selenium
 *.crx
