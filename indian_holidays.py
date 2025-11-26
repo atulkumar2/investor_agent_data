@@ -164,3 +164,4 @@ class _PublicHolidaysProxy:
 
 
 PUBLIC_HOLIDAYS = _PublicHolidaysProxy()
+
