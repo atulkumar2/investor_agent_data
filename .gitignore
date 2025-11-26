@@ -43,6 +43,7 @@ venv.bak/
 # Project specific
 data/
 logs/
+analysis/
 *.csv
 *.log
 *.txt
