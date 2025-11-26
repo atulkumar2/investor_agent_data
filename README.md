@@ -12,13 +12,21 @@ Downloads NSE bhavcopy files for specified date ranges
 
 Analyzes existing NSE bhavcopy files in a directory and identifies missing dates
 
+### 3. indian_holidays.py - Public Holiday Configuration
+
+Shared module containing NSE market holidays. Loads actual holiday dates from a
+comprehensive CSV file (667+ holidays from 1990-2024+), with fallback to basic
+recurring holidays if the file is unavailable. Both the downloader and analyzer
+use this module to skip market closed days.
+
 ## Features
 
 - ✅ Automated navigation through NSE website with calendar-based date selection
 - ✅ Configurable date range via command-line arguments
 - ✅ Weekly browser session batching (Monday-Friday) for improved performance
 - ✅ Intelligent operation skipping - full navigation only on first day of week
-- ✅ Automatic weekend skipping with logged entries
+- ✅ Automatic weekend and public holiday skipping with logged entries
+- ✅ Shared public holiday configuration across all scripts
 - ✅ Rotating browser user agents for each download
 - ✅ Optimized wait times (5 seconds per selector)
 - ✅ 60-second download wait with retry mechanism
@@ -106,13 +114,32 @@ uv run python analyze_existing_files.py --input-dir "C:\path\to\nse\data" --outp
 This will generate:
 
 1. `existing_files_summary.csv` - Details of all found files with size and shape
-2. `missing_files.csv` - List of missing dates (weekdays and weekends)
+2. `missing_files.csv` - List of missing weekday dates (excluding weekends and public holidays)
 
 ### Analysis Options
 
 - `--input-dir`: Directory containing NSE CSV files (required)
 - `--output-dir`: Where to save analysis results (default: analysis)
 - `--no-recursive`: Search only in the specified directory, not subdirectories
+
+## Public Holidays
+
+The `indian_holidays.py` module manages NSE market holidays:
+
+**Primary Source**: Loads from comprehensive CSV file with 667+ actual NSE holidays (1990-2024+)
+
+- Path: `nse_holidays.csv` (in repository root)
+- Includes all festival holidays, national holidays, and special market closures
+
+**Fallback**: If CSV file is unavailable, uses basic recurring holidays:
+
+- **Republic Day** - January 26
+- **Labour Day** - May 1  
+- **Independence Day** - August 15
+- **Gandhi Jayanti** - October 2
+- **Christmas** - December 25
+
+Both scripts automatically skip these dates as the market is closed.
 
 ## Output
 
@@ -151,6 +178,7 @@ You can modify the following variables in the script:
 - First day of week performs full navigation, search, and checkbox selection
 - Subsequent days in the same week skip directly to date selection for speed
 - Weekends (Saturday/Sunday) are automatically skipped with logged entries
+- Public holidays are automatically skipped with logged entries (see indian_holidays.py)
 - User agents are rotated for each weekly session
 - Sleep intervals are randomized to avoid triggering rate limits
 - Failed downloads are logged with their weekday for reference

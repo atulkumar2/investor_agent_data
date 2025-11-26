@@ -16,6 +16,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from indian_holidays import is_public_holiday
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -166,30 +168,34 @@ def find_missing_dates(files_info, output_dir):
     # Create set of existing dates
     existing_dates = set(dates)
 
-    # Find missing dates (excluding weekends)
+    # Find missing dates (excluding weekends and public holidays)
     missing_info = []
     current_date = min_date
 
     while current_date <= max_date:
         weekday = current_date.weekday()
 
+        # Skip weekends entirely
+        if weekday >= 5:
+            current_date += timedelta(days=1)
+            continue
+
+        # Skip public holidays
+        if is_public_holiday(current_date):
+            current_date += timedelta(days=1)
+            continue
+
         if current_date not in existing_dates:
-            status = "Weekend" if weekday >= 5 else "Missing"
             missing_info.append({
                 'Date': current_date.strftime('%Y-%m-%d'),
                 'Weekday': current_date.strftime('%A'),
-                'Status': status,
                 'Expected_Filename': f"sec_bhavdata_full_{current_date.strftime('%d%m%Y')}.csv"
             })
 
         current_date += timedelta(days=1)
 
-    # Filter to only show missing weekdays
-    missing_weekdays = [m for m in missing_info if m['Status'] == 'Missing']
-
     logging.info(
-        "Found %d missing weekday dates out of %d total missing dates",
-        len(missing_weekdays),
+        "Found %d missing weekday dates (excluding public holidays)",
         len(missing_info)
     )
 
@@ -223,7 +229,7 @@ def save_results(files_info, missing_info, output_dir):
     # Save missing dates
     if missing_info:
         missing_file = output_path / 'missing_files.csv'
-        fieldnames = ['Date', 'Weekday', 'Status', 'Expected_Filename']
+        fieldnames = ['Date', 'Weekday', 'Expected_Filename']
 
         with open(missing_file, 'w', newline='', encoding='utf-8') as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -293,16 +299,14 @@ def main():
     print("="*60)
     print(f"Total files found: {len(files_info)}")
     print(f"Date range: {files_info[0]['Date']} to {files_info[-1]['Date']}")
+    print(f"Missing weekday dates: {len(missing_info)}")
 
-    missing_weekdays = [m for m in missing_info if m['Status'] == 'Missing']
-    print(f"Missing weekday dates: {len(missing_weekdays)}")
-
-    if missing_weekdays:
+    if missing_info:
         print("\nMissing weekday dates:")
-        for m in missing_weekdays[:10]:  # Show first 10
+        for m in missing_info[:10]:  # Show first 10
             print(f"  - {m['Date']} ({m['Weekday']})")
-        if len(missing_weekdays) > 10:
-            print(f"  ... and {len(missing_weekdays) - 10} more")
+        if len(missing_info) > 10:
+            print(f"  ... and {len(missing_info) - 10} more")
 
     print(f"\nResults saved to: {args.output_dir}/")
     print("="*60)

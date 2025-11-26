@@ -19,6 +19,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+from indian_holidays import is_public_holiday
+
 # Configuration
 BASE_URL = "https://www.nseindia.com/all-reports#cr_equity_archives"
 SLEEP_MIN = 3  # Minimum sleep seconds between downloads
@@ -534,6 +536,26 @@ def main():
                 'Rows': 0,
                 'Columns': 0,
                 'Error': 'Weekend - Market Closed'
+            }
+            results.append(result)
+            current_date += timedelta(days=1)
+            continue
+
+        # Skip public holidays
+        if is_public_holiday(current_date):
+            logging.info(
+                "Skipping public holiday: %s",
+                current_date.strftime('%Y-%m-%d')
+            )
+            result = {
+                'Date': current_date.strftime('%Y-%m-%d'),
+                'Weekday': current_date.strftime('%A'),
+                'Status': 'Skipped',
+                'Filename': 'N/A',
+                'File_Size_KB': 0,
+                'Rows': 0,
+                'Columns': 0,
+                'Error': 'Public Holiday - Market Closed'
             }
             results.append(result)
             current_date += timedelta(days=1)
