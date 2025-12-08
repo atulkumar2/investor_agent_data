@@ -42,6 +42,7 @@ venv.bak/
 
 # Project specific
 data/
+output/
 logs/
 analysis/
 *.csv
