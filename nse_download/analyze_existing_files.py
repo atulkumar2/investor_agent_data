@@ -15,14 +15,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
-
 from indian_holidays import is_public_holiday
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 
 def parse_filename_date(filename):
@@ -37,7 +33,8 @@ def parse_filename_date(filename):
     Returns:
         datetime object or None if date cannot be parsed
     """
-    pattern = r'sec_bhavdata_full_(\d{2})(\d{2})(\d{4})\.csv'
+    pattern = r"sec_bhavdata_full_(\d{2})(\d{2})(\d{4})\.csv"
+
     match = re.search(pattern, filename)
 
     if match:
@@ -114,27 +111,27 @@ def analyze_directory(directory_path, output_dir, recursive=True):
         rows, columns = get_csv_shape(csv_file)
 
         file_info = {
-            'Filename': filename,
-            'Date': file_date.strftime('%Y-%m-%d'),
-            'Weekday': file_date.strftime('%A'),
-            'File_Size_KB': f"{file_size_kb:.2f}",
-            'Rows': rows if rows is not None else 'Error',
-            'Columns': columns if columns is not None else 'Error',
-            'Full_Path': str(csv_file)
+            "Filename": filename,
+            "Date": file_date.strftime("%Y-%m-%d"),
+            "Weekday": file_date.strftime("%A"),
+            "File_Size_KB": f"{file_size_kb:.2f}",
+            "Rows": rows if rows is not None else "Error",
+            "Columns": columns if columns is not None else "Error",
+            "Full_Path": str(csv_file),
         }
 
         files_info.append(file_info)
         logging.info(
             "Processed: %s - Date: %s, Size: %.2f KB, Shape: (%s, %s)",
             filename,
-            file_info['Date'],
+            file_info["Date"],
             file_size_kb,
             rows,
-            columns
+            columns,
         )
 
     # Sort by date
-    files_info.sort(key=lambda x: x['Date'])
+    files_info.sort(key=lambda x: x["Date"])
 
     return files_info
 
@@ -155,14 +152,12 @@ def find_missing_dates(files_info, output_dir):
         return []
 
     # Parse dates
-    dates = [datetime.strptime(f['Date'], '%Y-%m-%d') for f in files_info]
+    dates = [datetime.strptime(f["Date"], "%Y-%m-%d") for f in files_info]
     min_date = min(dates)
     max_date = max(dates)
 
     logging.info(
-        "Date range: %s to %s",
-        min_date.strftime('%Y-%m-%d'),
-        max_date.strftime('%Y-%m-%d')
+        "Date range: %s to %s", min_date.strftime("%Y-%m-%d"), max_date.strftime("%Y-%m-%d")
     )
 
     # Create set of existing dates
@@ -186,18 +181,17 @@ def find_missing_dates(files_info, output_dir):
             continue
 
         if current_date not in existing_dates:
-            missing_info.append({
-                'Date': current_date.strftime('%Y-%m-%d'),
-                'Weekday': current_date.strftime('%A'),
-                'Expected_Filename': f"sec_bhavdata_full_{current_date.strftime('%d%m%Y')}.csv"
-            })
+            missing_info.append(
+                {
+                    "Date": current_date.strftime("%Y-%m-%d"),
+                    "Weekday": current_date.strftime("%A"),
+                    "Expected_Filename": f"sec_bhavdata_full_{current_date.strftime('%d%m%Y')}.csv",
+                }
+            )
 
         current_date += timedelta(days=1)
 
-    logging.info(
-        "Found %d missing weekday dates (excluding public holidays)",
-        len(missing_info)
-    )
+    logging.info("Found %d missing weekday dates (excluding public holidays)", len(missing_info))
 
     return missing_info
 
@@ -216,10 +210,10 @@ def save_results(files_info, missing_info, output_dir):
 
     # Save files summary
     if files_info:
-        summary_file = output_path / 'existing_files_summary.csv'
-        fieldnames = ['Filename', 'Date', 'Weekday', 'File_Size_KB', 'Rows', 'Columns', 'Full_Path']
+        summary_file = output_path / "existing_files_summary.csv"
+        fieldnames = ["Filename", "Date", "Weekday", "File_Size_KB", "Rows", "Columns", "Full_Path"]
 
-        with open(summary_file, 'w', newline='', encoding='utf-8') as f:
+        with open(summary_file, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(files_info)
@@ -228,10 +222,10 @@ def save_results(files_info, missing_info, output_dir):
 
     # Save missing dates
     if missing_info:
-        missing_file = output_path / 'missing_files.csv'
-        fieldnames = ['Date', 'Weekday', 'Expected_Filename']
+        missing_file = output_path / "missing_files.csv"
+        fieldnames = ["Date", "Weekday", "Expected_Filename"]
 
-        with open(missing_file, 'w', newline='', encoding='utf-8') as f:
+        with open(missing_file, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(missing_info)
@@ -242,27 +236,22 @@ def save_results(files_info, missing_info, output_dir):
 def parse_arguments():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        description='Analyze existing NSE bhavcopy files and find missing dates'
+        description="Analyze existing NSE bhavcopy files and find missing dates"
     )
 
     parser.add_argument(
-        '--input-dir',
+        "--input-dir", type=str, required=True, help="Directory containing NSE bhavcopy CSV files"
+    )
+
+    parser.add_argument(
+        "--output-dir",
         type=str,
-        required=True,
-        help='Directory containing NSE bhavcopy CSV files'
+        default="analysis",
+        help="Directory to save analysis results (default: analysis)",
     )
 
     parser.add_argument(
-        '--output-dir',
-        type=str,
-        default='analysis',
-        help='Directory to save analysis results (default: analysis)'
-    )
-
-    parser.add_argument(
-        '--no-recursive',
-        action='store_true',
-        help='Do not search subdirectories recursively'
+        "--no-recursive", action="store_true", help="Do not search subdirectories recursively"
     )
 
     return parser.parse_args()
@@ -275,11 +264,7 @@ def main():
     logging.info("Starting analysis of directory: %s", args.input_dir)
 
     # Analyze existing files
-    files_info = analyze_directory(
-        args.input_dir,
-        args.output_dir,
-        recursive=not args.no_recursive
-    )
+    files_info = analyze_directory(args.input_dir, args.output_dir, recursive=not args.no_recursive)
 
     if not files_info:
         logging.error("No valid files found to analyze")
@@ -294,9 +279,9 @@ def main():
     save_results(files_info, missing_info, args.output_dir)
 
     # Print summary
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("ANALYSIS SUMMARY")
-    print("="*60)
+    print("=" * 60)
     print(f"Total files found: {len(files_info)}")
     print(f"Date range: {files_info[0]['Date']} to {files_info[-1]['Date']}")
     print(f"Missing weekday dates: {len(missing_info)}")
@@ -309,8 +294,8 @@ def main():
             print(f"  ... and {len(missing_info) - 10} more")
 
     print(f"\nResults saved to: {args.output_dir}/")
-    print("="*60)
+    print("=" * 60)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -18,10 +18,10 @@ DEFAULT_HOLIDAY_FILE = Path(__file__).parent / "nse_holidays.csv"
 # Fallback list of recurring Indian national public holidays (month, day)
 # Used if the CSV file is not available
 RECURRING_HOLIDAYS = [
-    (1, 26),   # Republic Day (January 26)
-    (5, 1),    # Labour Day (May 1)
-    (8, 15),   # Independence Day (August 15)
-    (10, 2),   # Gandhi Jayanti (October 2)
+    (1, 26),  # Republic Day (January 26)
+    (5, 1),  # Labour Day (May 1)
+    (8, 15),  # Independence Day (August 15)
+    (10, 2),  # Gandhi Jayanti (October 2)
     (12, 25),  # Christmas (December 25)
 ]
 
@@ -57,12 +57,12 @@ def load_holidays(holiday_file=None):
     # Load holidays from CSV
     holidays = set()
     try:
-        with open(holiday_file, 'r', encoding='utf-8') as f:
+        with open(holiday_file, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line:
                     try:
-                        date = datetime.strptime(line, '%Y-%m-%d').date()
+                        date = datetime.strptime(line, "%Y-%m-%d").date()
                         holidays.add(date)
                     except ValueError:
                         continue  # Skip invalid date formats
@@ -106,13 +106,13 @@ def is_public_holiday(date):
         return (date.month, date.day) in holidays
     else:
         # Check against actual date objects
-        if hasattr(date, 'date'):
+        if hasattr(date, "date"):
             date = date.date()
-        
+
         # First check if it's in the CSV holidays
         if date in holidays:
             return True
-        
+
         # Fallback to recurring holidays for dates not in CSV
         return (date.month, date.day) in RECURRING_HOLIDAYS
 
@@ -170,4 +170,3 @@ class _PublicHolidaysProxy:
 
 
 PUBLIC_HOLIDAYS = _PublicHolidaysProxy()
-
