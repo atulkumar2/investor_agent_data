@@ -17,26 +17,12 @@ repos:
       - id: debug-statements
         name: Check for debug statements
 
-  - repo: https://github.com/psf/black
-    rev: 24.8.0
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: stable
     hooks:
-      - id: black
-        name: Format Python code with Black
-        language_version: python3
-
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
-        name: Sort Python imports
-        args: ["--profile", "black"]
-
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.1.1
-    hooks:
-      - id: flake8
-        name: Lint Python code with Flake8
-        args: ["--max-line-length=88", "--extend-ignore=E203,W503"]
+      - id: ruff
+        name: Lint Python files with Ruff
+        files: \.py$
 
   - repo: https://github.com/executablebooks/mdformat
     rev: 0.7.17

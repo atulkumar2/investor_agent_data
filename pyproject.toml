@@ -1,8 +1,8 @@
 [project]
-name = "nse-data-download"
+name = "investor-agent-data"
 version = "0.1.0"
 description = "Automated NSE Bhavcopy data downloader"
-requires-python = ">=3.8"
+requires-python = ">=3.13"
 dependencies = [
     "selenium>=4.15.0",
     "pandas>=2.0.0",
@@ -15,3 +15,48 @@ packages = ["."]
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+exclude = ["build/", "dist/", ".venv/"]
+extend-exclude = [".vscode", ".idea", "__pycache__", ".python-version", ".ruff.toml", "ruff.toml", "setup.cfg", "pyproject.toml"]
+extend-include = ["*.ipynb"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "B9", "PL"]
+ignore = ["E266"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+docstring-code-format = true
+docstring-code-line-length = 100
+
+[tool.ruff.lint.pylint]
+# Maximum number of arguments for function / method
+max-args = 8
+# Maximum number of boolean expressions in a if statement
+max-bool-expr = 4
+# Maximum number of branch for function / method body
+max-branches = 15
+# Maximum number of locals for function / method body
+max-locals = 15
+# Maximum number of nested blocks for function / method body
+max-nested-blocks = 5
+# Maximum number of positional arguments allowed for a function or method definition
+max-positional-args = 6
+# Maximum number of public methods for a class (see R0904).
+max-public-methods = 20
+# Maximum number of return statements allowed for a function or method body
+max-returns = 8
+# Maximum number of statements in function / method body
+max-statements = 120
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
