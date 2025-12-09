@@ -67,6 +67,86 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+## Code Quality and Formatting
+
+### Pre-commit Hooks
+
+This repository uses pre-commit hooks to automatically fix basic linting issues before commits. The hooks handle:
+
+- Removing trailing whitespace
+- Ensuring files end with a newline
+- Formatting Python code with Black
+- Sorting imports with isort
+- Linting with flake8
+- Formatting Markdown files
+
+#### Installing Pre-commit Hooks
+
+1. Install pre-commit:
+
+```powershell
+pip install pre-commit
+```
+
+Or using uv:
+
+```powershell
+uv add --dev pre-commit
+```
+
+2. Install the hooks:
+
+```powershell
+pre-commit install
+```
+
+3. (Optional) Run on all files:
+
+```powershell
+pre-commit run --all-files
+```
+
+Now, pre-commit will automatically run on every commit, fixing issues where possible.
+
+### Editor Configuration for On-Save Formatting
+
+To automatically fix linting issues when saving files (before committing), configure your editor to format on save. This complements the pre-commit hooks and provides immediate feedback.
+
+#### VS Code Configuration
+
+1. Install the following extensions:
+   - Python (Microsoft)
+   - Pylint (Microsoft) or Flake8
+   - Black Formatter
+   - isort
+   - Prettier - Code formatter (for Markdown)
+
+2. Update your `settings.json` (User or Workspace):
+
+```json
+{
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": ["--line-length", "88"],
+    "python.sortImports.args": ["--profile", "black"],
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true
+    },
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "[markdown]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    }
+}
+```
+
+3. For Markdown formatting, ensure Prettier is configured for `.md` files.
+
+This setup will automatically format Python code with Black, sort imports with isort, remove trailing whitespace, ensure files end with newlines, and format Markdown files on save.
+
 ## Usage
 
 ### Basic Usage (with defaults)

@@ -1,0 +1,49 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        name: Remove trailing whitespace
+        files: \.(py|md|txt|yaml|yml)$
+      - id: end-of-file-fixer
+        name: Ensure files end with a newline
+        files: \.(py|md|txt|yaml|yml)$
+      - id: check-yaml
+        name: Check YAML files
+      - id: check-added-large-files
+        name: Prevent large files from being added
+      - id: check-merge-conflict
+        name: Check for merge conflict markers
+      - id: debug-statements
+        name: Check for debug statements
+
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
+    hooks:
+      - id: black
+        name: Format Python code with Black
+        language_version: python3
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        name: Sort Python imports
+        args: ["--profile", "black"]
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+        name: Lint Python code with Flake8
+        args: ["--max-line-length=88", "--extend-ignore=E203,W503"]
+
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.17
+    hooks:
+      - id: mdformat
+        name: Format Markdown files
+        additional_dependencies:
+          - mdformat-gfm
+          - mdformat-black
+        files: \.md$
