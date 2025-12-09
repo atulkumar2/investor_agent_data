@@ -1,9 +1,27 @@
 """
 Analyze existing NSE bhavcopy files in a directory.
 
-This script scans a directory for NSE bhavcopy CSV files and generates:
-1. A summary CSV with file details (date, size, shape)
-2. A missing files CSV listing potentially missing dates
+Usage:
+    python analyze_existing_files.py --input-dir <path_to_data> [--output-dir <path_to_output>] [--no-recursive]
+
+This script scans a specified directory for NSE bhavcopy CSV files matching the pattern
+'sec_bhavdata_full_DDMMYYYY.csv' and generates two reports:
+
+1. A summary CSV ('existing_files_summary.csv') containing details for each file found:
+   - Filename and full path
+   - Extracted date and weekday
+   - File size in KB
+   - CSV shape (rows, columns)
+
+2. A missing files CSV ('missing_files.csv') listing dates that are expected to have data
+   but are missing from the scanned directory. This logic excludes:
+   - Weekends (Saturdays and Sundays)
+   - Public holidays (based on the 'holidays.indian_holidays' module)
+
+Arguments:
+    --input-dir:    (Required) Directory containing NSE bhavcopy CSV files.
+    --output-dir:   (Optional) Directory to save analysis results. Defaults to 'analysis'.
+    --no-recursive: (Optional) If set, disables recursive search in subdirectories.
 """
 
 import argparse
@@ -11,14 +29,35 @@ import csv
 import logging
 import os
 import re
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
+# Add project root to sys.path to allow imports from sibling directories
+project_root = str(Path(__file__).resolve().parent.parent)
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
 import pandas as pd
-from indian_holidays import is_public_holiday
+
+from holidays.indian_holidays import is_public_holiday
+
+# Constants
+SATURDAY = 5
+MISSING_FILES = "missing_files.csv"
+SUMMARY_FILES = "existing_files_summary.csv"
+DEFAULT_OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "logs")
+
+# Ensure log directory exists
+os.makedirs(DEFAULT_OUTPUT_DIR, exist_ok=True)
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+log_file = os.path.join(DEFAULT_OUTPUT_DIR, "analyze_files.log")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler(log_file), logging.StreamHandler(sys.stdout)],
+)
 
 
 def parse_filename_date(filename):
@@ -70,13 +109,12 @@ def get_csv_shape(filepath):
         return None, None
 
 
-def analyze_directory(directory_path, output_dir, recursive=True):
+def analyze_directory(directory_path, recursive=True):
     """
     Analyze all NSE bhavcopy files in directory.
 
     Args:
         directory_path: Path to directory containing CSV files
-        output_dir: Directory to save analysis results
         recursive: If True, search subdirectories recursively
 
     Returns:
@@ -136,13 +174,12 @@ def analyze_directory(directory_path, output_dir, recursive=True):
     return files_info
 
 
-def find_missing_dates(files_info, output_dir):
+def find_missing_dates(files_info):
     """
-    Find potentially missing dates between min and max dates in files.
+    Find missing dates between min and max dates in files.
 
     Args:
         files_info: List of file information dictionaries
-        output_dir: Directory to save missing files report
 
     Returns:
         List of missing date information dictionaries
@@ -171,7 +208,7 @@ def find_missing_dates(files_info, output_dir):
         weekday = current_date.weekday()
 
         # Skip weekends entirely
-        if weekday >= 5:
+        if weekday >= SATURDAY:
             current_date += timedelta(days=1)
             continue
 
@@ -210,7 +247,7 @@ def save_results(files_info, missing_info, output_dir):
 
     # Save files summary
     if files_info:
-        summary_file = output_path / "existing_files_summary.csv"
+        summary_file = output_path / SUMMARY_FILES
         fieldnames = ["Filename", "Date", "Weekday", "File_Size_KB", "Rows", "Columns", "Full_Path"]
 
         with open(summary_file, "w", newline="", encoding="utf-8") as f:
@@ -222,7 +259,7 @@ def save_results(files_info, missing_info, output_dir):
 
     # Save missing dates
     if missing_info:
-        missing_file = output_path / "missing_files.csv"
+        missing_file = output_path / MISSING_FILES
         fieldnames = ["Date", "Weekday", "Expected_Filename"]
 
         with open(missing_file, "w", newline="", encoding="utf-8") as f:
@@ -246,8 +283,8 @@ def parse_arguments():
     parser.add_argument(
         "--output-dir",
         type=str,
-        default="analysis",
-        help="Directory to save analysis results (default: analysis)",
+        default=DEFAULT_OUTPUT_DIR,
+        help=f"Directory to save analysis results (default: {DEFAULT_OUTPUT_DIR})",
     )
 
     parser.add_argument(
@@ -264,7 +301,7 @@ def main():
     logging.info("Starting analysis of directory: %s", args.input_dir)
 
     # Analyze existing files
-    files_info = analyze_directory(args.input_dir, args.output_dir, recursive=not args.no_recursive)
+    files_info = analyze_directory(args.input_dir, recursive=not args.no_recursive)
 
     if not files_info:
         logging.error("No valid files found to analyze")
@@ -273,7 +310,7 @@ def main():
     logging.info("Successfully analyzed %d files", len(files_info))
 
     # Find missing dates
-    missing_info = find_missing_dates(files_info, args.output_dir)
+    missing_info = find_missing_dates(files_info)
 
     # Save results
     save_results(files_info, missing_info, args.output_dir)

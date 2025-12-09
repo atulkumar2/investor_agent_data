@@ -7,12 +7,19 @@ for specified date range with logging and browser agent rotation.
 import argparse
 import logging
 import random
+import sys
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
+# Add project root to sys.path to allow imports from sibling directories
+# This must be done before importing from 'holidays'
+project_root = str(Path(__file__).resolve().parent.parent)
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
 import pandas as pd
-from indian_holidays import is_public_holiday
+from holidays.indian_holidays import is_public_holiday
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.chrome.options import Options
@@ -395,7 +402,7 @@ def download_bhavcopy_for_date(
             return False, None, "Download button click failed", 0
 
         # Generate expected filename
-        filename = "sec_bhavdata_full_%s.csv" % target_date.strftime("%d%m%Y")
+        filename = f"sec_bhavdata_full_{target_date.strftime('%d%m%Y')}.csv"
         filepath = data_folder / filename
 
         # Wait for file to download
@@ -429,7 +436,7 @@ def should_skip_date(current_date):
     # Skip weekends
     if weekday == 5:  # Saturday
         return True, "Saturday", "Weekend - Market Closed"
-    elif weekday == 6:  # Sunday
+    if weekday == 6:  # Sunday
         return True, "Sunday", "Weekend - Market Closed"
 
     # Skip public holidays
