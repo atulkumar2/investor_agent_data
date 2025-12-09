@@ -121,6 +121,7 @@ class NSEBhavcopyDownloader:
         self.status_logger = StatusLogger()
         self.session = requests.Session()
         self.session.headers.update(self.HEADERS)
+        self._last_cookie_time = 0  # Initialize cookie time
 
     def _get_cookie(self):
         """Get session cookie from NSE homepage"""
@@ -290,8 +291,6 @@ class NSEBhavcopyDownloader:
                 or (time.time() - self._last_cookie_time) > self.COOKIE_REFRESH_INTERVAL
             ):
                 self._get_cookie()
-                self._last_cookie_time = time.time()
-                time.sleep(1)
                 self._last_cookie_time = time.time()
                 time.sleep(1)
 
@@ -595,7 +594,7 @@ def main():
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
     # Initialize downloader
-    downloader = NSEBhavcopyDownloader(output_dir=".", existing_dir=args.existing_dir)
+    downloader = NSEBhavcopyDownloader(output_dir=args.output_dir, existing_dir=args.existing_dir)
 
     # Download all files in range
     downloader.download_range(start_date, end_date)
