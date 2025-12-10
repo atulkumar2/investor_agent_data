@@ -33,12 +33,12 @@ import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
-# Add project root to sys.path to allow imports from sibling directories
-project_root = str(Path(__file__).resolve().parent.parent)
-if project_root not in sys.path:
-    sys.path.append(project_root)
-
 import pandas as pd
+
+# Add project root to sys.path to allow imports from sibling directories
+PROJECT_ROOT = str(Path(__file__).resolve().parent.parent)
+if PROJECT_ROOT not in sys.path:
+    sys.path.append(PROJECT_ROOT)
 
 from holidays.indian_holidays import is_public_holiday
 

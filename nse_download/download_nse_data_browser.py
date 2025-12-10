@@ -12,14 +12,7 @@ import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
-# Add project root to sys.path to allow imports from sibling directories
-# This must be done before importing from 'holidays'
-project_root = str(Path(__file__).resolve().parent.parent)
-if project_root not in sys.path:
-    sys.path.append(project_root)
-
 import pandas as pd
-from holidays.indian_holidays import is_public_holiday
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.chrome.options import Options
@@ -27,10 +20,23 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+# Add project root to sys.path to allow imports from sibling directories
+# This must be done before importing from 'holidays'
+PROJECT_ROOT = str(Path(__file__).resolve().parent.parent)
+if PROJECT_ROOT not in sys.path:
+    sys.path.append(PROJECT_ROOT)
+
+from holidays.indian_holidays import is_public_holiday  # noqa: E402
+
 # Configuration
 BASE_URL = "https://www.nseindia.com/all-reports#cr_equity_archives"
 SLEEP_MIN = 3  # Minimum sleep seconds between downloads
 SLEEP_MAX = 7  # Maximum sleep seconds between downloads
+
+# Weekday constants (Monday is 0, Sunday is 6)
+MONDAY = 0
+SATURDAY = 5
+SUNDAY = 6
 
 # User agents for rotation
 USER_AGENTS = [
@@ -139,8 +145,14 @@ def perform_initial_setup(driver):
         # Look for the "Full Bhavcopy and Security Deliverable data" checkmark
         logging.info("Looking for Full Bhavcopy checkmark...")
         checkmark_selectors = [
-            "//div[@class='card-body']//label[contains(., 'Full Bhavcopy')]//span[@class='checkmark']",
-            "//label[@class='chk_container'][contains(., 'Full Bhavcopy')]//span[@class='checkmark']",
+            (
+                "//div[@class='card-body']//label[contains(., 'Full Bhavcopy')]"
+                "//span[@class='checkmark']"
+            ),
+            (
+                "//label[@class='chk_container'][contains(., 'Full Bhavcopy')]"
+                "//span[@class='checkmark']"
+            ),
             "//label[@class='chk_container']//span[@class='checkmark']",
             "//span[@class='checkmark']",
         ]
@@ -233,7 +245,10 @@ def select_date_in_calendar(driver, target_date):
                     # Click right chevron to go forward
                     nav_button = driver.find_element(
                         By.XPATH,
-                        "//div[@data-role='navigator']//i[@class='fa fa-chevron-right']/parent::div",
+                        (
+                            "//div[@data-role='navigator']//i[@class='fa fa-chevron-right']"
+                            "/parent::div"
+                        ),
                     )
                     nav_button.click()
                     logging.info("Clicked right chevron to go forward")
@@ -241,7 +256,10 @@ def select_date_in_calendar(driver, target_date):
                     # Click left chevron to go backward
                     nav_button = driver.find_element(
                         By.XPATH,
-                        "//div[@data-role='navigator']//i[@class='fa fa-chevron-left']/parent::div",
+                        (
+                            "//div[@data-role='navigator']//i[@class='fa fa-chevron-left']"
+                            "/parent::div"
+                        ),
                     )
                     nav_button.click()
                     logging.info("Clicked left chevron to go backward")
@@ -305,7 +323,8 @@ def click_download_button(driver):
 
         # Find the download icon in the same card-body container
         download_icon_selectors = [
-            "//div[@class='card-body']//span[@class='reportDownloadIcon']//a[@aria-label='Download File']",
+            "//div[@class='card-body']//span[@class='reportDownloadIcon']"
+            "//a[@aria-label='Download File']",
             "//div[@class='card-body']//span[@class='reportDownloadIcon']//a",
             "//label[contains(., 'Full Bhavcopy')]/..//span[@class='reportDownloadIcon']//a",
             "//span[@class='reportDownloadIcon']//a[@class='pdf-download-link']",
@@ -434,9 +453,10 @@ def should_skip_date(current_date):
     weekday = current_date.weekday()
 
     # Skip weekends
-    if weekday == 5:  # Saturday
+    # Skip weekends
+    if weekday == SATURDAY:
         return True, "Saturday", "Weekend - Market Closed"
-    if weekday == 6:  # Sunday
+    if weekday == SUNDAY:
         return True, "Sunday", "Weekend - Market Closed"
 
     # Skip public holidays
@@ -452,7 +472,7 @@ def manage_browser_session(current_date, driver, user_agent, data_folder):
     is_first_of_week = False
 
     # Start new browser session on Monday or if no driver exists
-    if weekday == 0 or driver is None:  # Monday
+    if weekday == MONDAY or driver is None:
         if driver:
             logging.info("Closing previous week's browser session...")
             driver.quit()
@@ -656,7 +676,7 @@ def main():
 
         # Close browser on Friday or if it's the last date
         next_weekday = current_date.weekday() if current_date <= end_date else -1
-        if next_weekday == 5 or current_date > end_date:  # Saturday or past end
+        if next_weekday == SATURDAY or current_date > end_date:  # Saturday or past end
             if driver:
                 logging.info("Closing browser session at end of week...")
                 driver.quit()
