@@ -124,6 +124,7 @@ def perform_initial_setup(driver):
 
         search_box = None
         for selector in search_box_selectors:
+            # pylint: disable=broad-except
             try:
                 search_box = wait.until(EC.presence_of_element_located((By.XPATH, selector)))
                 if search_box:
@@ -159,6 +160,7 @@ def perform_initial_setup(driver):
 
         checkmark = None
         for selector in checkmark_selectors:
+            # pylint: disable=broad-except
             try:
                 checkmark = WebDriverWait(driver, 5).until(
                     EC.element_to_be_clickable((By.XPATH, selector))
@@ -204,6 +206,7 @@ def select_date_in_calendar(driver, target_date):
 
         calendar_button = None
         for selector in calendar_button_selectors:
+            # pylint: disable=broad-except
             try:
                 calendar_button = wait.until(EC.element_to_be_clickable((By.XPATH, selector)))
                 if calendar_button:
@@ -227,6 +230,7 @@ def select_date_in_calendar(driver, target_date):
 
         max_navigation_attempts = 24  # Limit to 2 years of navigation
         for attempt in range(max_navigation_attempts):
+            # pylint: disable=broad-except
             try:
                 # Find the current period displayed in calendar
                 period_element = driver.find_element(By.XPATH, "//div[@data-role='period']")
@@ -290,6 +294,7 @@ def select_date_in_calendar(driver, target_date):
 
         date_cell = None
         for selector in date_cell_selectors:
+            # pylint: disable=broad-except
             try:
                 # Reduce wait time from 30 to 5 seconds per selector
                 date_cell = WebDriverWait(driver, 5).until(
@@ -335,6 +340,7 @@ def click_download_button(driver):
 
         download_icon = None
         for selector in download_icon_selectors:
+            # pylint: disable=broad-except
             try:
                 # Scroll the element into view before clicking
                 elements = driver.find_elements(By.XPATH, selector)
@@ -391,6 +397,7 @@ def download_bhavcopy_for_date(
     If is_batch=True, driver will be reused and not quit at the end
     If is_first_of_week=True, performs initial setup (navigate, search, checkbox)
     """
+    # pylint: disable=broad-except
     driver_created = False
     try:
         logging.info(
@@ -496,6 +503,7 @@ def process_download_results(results, data_folder):
 
     for result in results:
         if result["Status"] == "Success" and result["Filename"] != "N/A":
+            # pylint: disable=broad-except
             filepath = data_folder / result["Filename"]
             try:
                 df = pd.read_csv(filepath)

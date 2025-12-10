@@ -101,6 +101,8 @@ def get_csv_shape(filepath):
     Returns:
         Tuple of (rows, columns) or (None, None) if error
     """
+    # pylint: disable=broad-except
+
     try:
         df = pd.read_csv(filepath)
         return df.shape
